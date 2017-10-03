@@ -1,4 +1,3 @@
-from sympy import *
 from pyro_derivatives import *
 t = symbols('t')
 
