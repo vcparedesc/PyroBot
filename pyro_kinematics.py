@@ -67,4 +67,61 @@ def Skew(vector):
         az = vector[2]
         return Matrix([ [0, -az, ay], [az, 0, ax], [-ay, ax, 0] ])
 
+def Axis(DH, direction, i):
+    sz = DH.shape[0]
+    if i >= sz:
+        print "Link number is out of bounds"
+        return 0
+    else:
+        R = eye(3)
+        for link in range(i + 1):
+            R = R * Rot(direction, DH[link, 3])
+        return R[:,2]
+    
+def PosFrameDH(DH, i):
+    sz = DH.shape[0]
+    if i > sz:
+        print "Link number is out of bounds"
+        return 0
+    elif i == 0:
+        return Matrix([[0], [0], [0]])
+    else:
+        Pos = zeros(3,1)
+        T = eye(4)
+        for link in range(i):
+            T = T * TransformationDH(DH,i)
+        return T[0:3,3]
+    
 
+    
+def TransformationDH(DH, i):
+    sz = DH.shape[0]
+    if i >= sz:
+        print "Link number is out of bounds"
+        return 0
+    else:
+        return HomR('z', DH[i, 3]) * HomT('z', DH[i, 2]) * HomT('x', DH[i, 0]) * HomR('x', DH[i, 1])
+
+def JacobianDH(DH, i):
+    sz = DH.shape[0]
+    Jw = zeros(3, sz)
+    Jv = zeros(3, sz)
+    if i >= sz:
+        print "Link number is out of bounds"
+        return 0
+    else:
+        for link in range(sz):
+            if DH[link, 4] == "r":        
+                Jw[0, link] = Axis(DH,'z',link)
+                Jv[0, link] = Skew(Axis(DH,'z',link)) * (PosFrameDH(DH, sz) - PosFrameDH(DH, i))
+            elif DH[link, 4] == "p":
+                Jw[0, link] = Matrix([[0], [0], [0]])
+                Jv[0, link] = Axis(DH,'z',link)
+        return Matrix[Jv,Jw]
+
+def LoadDH(DH):
+    sz = DH.shape[0]
+    T = eye(4)
+    for i in range(sz):
+        T = T * TransformationDH(DH, i)
+        
