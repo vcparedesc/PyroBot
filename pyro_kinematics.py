@@ -99,7 +99,7 @@ def Skew(vector):
 def AxisZ(DH, i):
     sz = DH.shape[0]
     if (i > sz):
-        print "Joint number is out of bounds - AxisZ"
+        print("Joint number is out of bounds - AxisZ")
         return 0
     elif i == 0:
         R = eye(3)
@@ -117,7 +117,7 @@ def AxisZ(DH, i):
 def PosFrameDH(DH, i):
     sz = DH.shape[0]
     if (i > sz):
-        print "Joint number is out of bounds - PosFrameDH"
+        print("Joint number is out of bounds - PosFrameDH")
         return 0
     elif i == 0:
         return zeros(3,1)
@@ -128,14 +128,14 @@ def PosFrameDH(DH, i):
             T = simplify(T * TransformationDH(DH,link))
         return T[0:3,3]
      
-# TransformationDH: Computes the transformation matrix of link: i wrt link: i + 1
+# TransformationDH: Computes the transformation matrix of link: i wrt link: i + 1 (i + 1 wrt i?)
 # @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
 # where: a, alfa, d, theta are the DH parameters, 'r' means a rotational joint and 'p' a prismatic one
 # @i: Represents the link number where the transformation is required
 def TransformationDH(DH, i):
     sz = DH.shape[0]
     if (i >= sz):
-        print "Link number is out of bounds - TransformationDH"
+        print("Link number is out of bounds - TransformationDH")
         return 0
     else:
         return simplify(HomR('z', DH[i, 3]) * HomT('z', DH[i, 2]) * HomT('x', DH[i, 0]) * HomR('x', DH[i, 1]))
@@ -149,17 +149,25 @@ def JacobianDH(DH, i):
     Jw = zeros(3, sz)
     Jv = zeros(3, sz)
     if i > sz:
-        print "Joint number is out of bounds - JacobianDH"
+        print("Joint number is out of bounds - JacobianDH")
         return 0
     else:
         for link in range(i):
             if (DH[link, 4] == revolute):
-                Jw[0, link] = AxisZ(DH,'z',link)
+                Jw[0, link] = AxisZ(DH,link)
                 Jv[0, link] = Skew(AxisZ(DH,link)) * (PosFrameDH(DH, sz) - PosFrameDH(DH, link))
             elif (DH[link, 4] == prismatic):
                 Jw[0, link] = Matrix([[0], [0], [0]])
                 Jv[0, link] = AxisZ(DH,link)
         return Matrix([Jv,Jw])
+
+def JacobianvDH(DH, i):
+    sz = DH.shape[0]
+    return JacobianDH(DH,i)[0:3, 0:sz]
+
+def JacobianwDH(DH, i):
+    sz = DH.shape[0]
+    return JacobianDH(DH, i)[3:6, 0:sz]
 
 # JointKin: Computes the transformation matrix related to Joint i
 # @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
@@ -168,7 +176,7 @@ def JacobianDH(DH, i):
 def JointKin(DH, i):
     sz = DH.shape[0]
     if i > sz:
-        print "Joint number is out of bounds - JointKin"
+        print("Joint number is out of bounds - JointKin")
         return 0
     T = eye(4)
     for i in range(i):
