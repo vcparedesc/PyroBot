@@ -33,11 +33,11 @@ def change_vars(expr, oldVar, newVar):
         nexpr = nexpr.subs(oldVar[l - idx - 1], newVar[l - idx - 1])
     return nexpr
 
-def robot_Dmat(DH, Masses, Inertias):
+def robot_Dmat(DH, Masses, Inertias, CoMs):
     sz = DH.shape[0]
     Dmat = zeros(sz, sz)
     for link_i in range(sz):
-        Jacob = JacobianDH(DH, link_i + 1) # Joint i + 1
+        Jacob = JacobianDH_CoM(DH, link_i + 1, CoMs) # Joint i + 1
         mass = Masses[link_i]
         InertiaCoM = Inertias[3 * link_i: 3 * (link_i + 1), 0:3]
         R = TransformationDH(DH, link_i)[0:3,0:3] # Link i
@@ -61,20 +61,20 @@ def robot_Cmat(Dmat, DH):
 # @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
 # where: a, alfa, d, theta are the DH parameters, 'r' means a rotational joint and 'p' a prismatic one
 # @g: Represents the gravity vector in three dimensions, for instance: g = Matrix([ [0], [0], [-9.81] })
-def robot_Gmat(DH, g, Masses):
+def robot_Gmat(DH, g, Masses, CoMs):
     sz = DH.shape[0]
     PotEnergy = Matrix([[0]])
     Gmat = zeros(sz, 1)
     for dof in range(sz):
         mass = Masses[dof]
-        PotEnergy = PotEnergy + mass * g.T * PosFrameDH(DH, dof + 1)
+        PotEnergy = PotEnergy + mass * g.T * Vector_PosFrameDH(DH, dof + 1,CoMs[dof,:].T)
 
     for dof in range(sz):
         Gmat[dof] = diff(PotEnergy, DH[dof, 3])
     return simplify(Gmat)
 
-def robot_dynamics(DH,g, Masses, Inertias):
-    Dmat = robot_Dmat(DH, Masses, Inertias)
+def robot_dynamics(DH,g, Masses, Inertias, CoMs):
+    Dmat = robot_Dmat(DH, Masses, Inertias, CoMs)
     Cmat = robot_Cmat(Dmat, DH)
-    Gmat = robot_Gmat(DH, g, Masses)
+    Gmat = robot_Gmat(DH, g, Masses, CoMs)
     return (Dmat, Cmat, Gmat)

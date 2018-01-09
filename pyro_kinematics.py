@@ -127,6 +127,35 @@ def PosFrameDH(DH, i):
         for link in range(i):
             T = simplify(T * TransformationDH(DH,link))
         return T[0:3,3]
+
+# Vector_PosFrameDH: Returns the vector wrt to frame i given the DH table.
+# @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
+# where: a, alfa, d, theta are the DH parameters, 'r' means a rotational joint and 'p' a prismatic one
+# @i: Represents the joint number which is required to obtain the position. (Joints start at 0)
+# @Vector: Represents the Vector wrt frame i
+def Vector_PosFrameDH(DH, i, Vector):
+    sz = DH.shape[0]
+    if (i > sz):
+        print("Joint number is out of bounds - Vector_PosFrameDH")
+        return 0
+    elif i == 0:
+        return Vector
+    else:
+        Pos = zeros(3,1)
+        T = eye(4)
+        for link in range(i):
+            T = simplify(T * TransformationDH(DH,link))
+        return simplify((T * Matrix([ Vector, [1] ]))[0:3,0])
+
+
+# CoM_PosFrameDH: Returns the position of the CoM wrt to frame i given the DH table.
+# @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
+# where: a, alfa, d, theta are the DH parameters, 'r' means a rotational joint and 'p' a prismatic one
+# @i: Represents the joint number which is required to obtain the position. (Joints start at 0)
+# @CoMs: is a ndof * 4 matrix with all the link CoMs 
+def CoM_PosFrameDH(DH, i, CoMs):
+    return Vector_PosFrameDH(DH, i, CoMs[i,:].T)
+    
      
 # TransformationDH: Computes the transformation matrix of link: i wrt link: i + 1 (i + 1 wrt i?)
 # @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
@@ -161,13 +190,55 @@ def JacobianDH(DH, i):
                 Jv[0, link] = AxisZ(DH,link)
         return Matrix([Jv,Jw])
 
+# JacobianvDH: Computes the velocity jacobian matrix of joint: i
+# @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
+# where: a, alfa, d, theta are the DH parameters, 'r' means a rotational joint and 'p' a prismatic one
+# @i: Represents the joint number where the jacobian is required    
 def JacobianvDH(DH, i):
     sz = DH.shape[0]
     return JacobianDH(DH,i)[0:3, 0:sz]
 
+# JacobianwDH: Computes the rotation jacobian matrix of joint: i
+# @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
+# where: a, alfa, d, theta are the DH parameters, 'r' means a rotational joint and 'p' a prismatic one
+# @i: Represents the joint number where the jacobian is required
 def JacobianwDH(DH, i):
     sz = DH.shape[0]
     return JacobianDH(DH, i)[3:6, 0:sz]
+
+# JacobianDH_WrtPoint: Computes the jacobian matrix of a vector_wrt the frame_i
+# @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
+# where: a, alfa, d, theta are the DH parameters, 'r' means a rotational joint and 'p' a prismatic one
+# @frame_i: Represents the joint number where the jacobian is required
+# @vector_wrt: is a 3x1 vector representing the location of the point wrt to frame_i
+def JacobianDH_WrtPoint(DH, frame_i, vector_wrt):
+    sz = DH.shape[0]
+    Jw = zeros(3, sz)
+    Jv = zeros(3, sz)
+    if frame_i > sz:
+        print("Joint number is out of bounds - JacobianDH")
+        return 0
+    else:
+        for link in range(frame_i):
+            if (DH[link, 4] == revolute):
+                Jw[0, link] = AxisZ(DH,link)
+                Jv[0, link] = Skew(AxisZ(DH,link)) * (Vector_PosFrameDH(DH, frame_i,vector_wrt) - PosFrameDH(DH,link))
+            elif (DH[link, 4] == prismatic):
+                Jw[0, link] = Matrix([[0], [0], [0]])
+                Jv[0, link] = AxisZ(DH,link)
+        return Matrix([Jv,Jw])
+
+# JacobianDH_CoM: Computes the jacobian matrix of the CoM of the link i 
+# @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
+# where: a, alfa, d, theta are the DH parameters, 'r' means a rotational joint and 'p' a prismatic one
+# @frame_i: Represents the joint number where the jacobian is required
+# @CoMs: is a ndof * 4 matrix with all the link CoMs 
+def JacobianDH_CoM(DH, frame_i, CoMs):
+    if frame_i == 0:
+        return zeros(6,DH.size[0])
+    else:
+        return JacobianDH_WrtPoint(DH, frame_i, CoMs[frame_i - 1,:].T)
+    
 
 # JointKin: Computes the transformation matrix related to Joint i
 # @DH: Denavit hartenberg table: Matrix([ [a1, alfa1, d1, theta1, 'r'], [a2, alfa2, d2, theta2, 'p'], ... ])
