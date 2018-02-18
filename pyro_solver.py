@@ -19,14 +19,14 @@ def dX(y,t):
 def simulate(X0, t):
     sol = odeint(dX, X0, t)
     solutions = sol
-    for var in range(len(X0) / 2):
+    for var in range(len(X0) // 2):
         plt.plot(t, sol[:,var], label = 'x' + str(var + 1))
     plt.legend(loc='best')
     plt.xlabel('t')
     plt.grid()
     plt.show()
-    for var in range(len(X0) / 2):
-        plt.plot(t, sol[:,var + len(X0) / 2], label = 'xd' + str(var + 1))
+    for var in range(len(X0) // 2):
+        plt.plot(t, sol[:,var + len(X0) // 2], label = 'xd' + str(var + 1))
     plt.legend(loc='best')
     plt.xlabel('t')
     plt.grid()

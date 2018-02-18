@@ -26,13 +26,6 @@ def get_fx_gx(EoM, Q):
     gx[l,0] = Mat_M.inv();
     return (fx,gx)
 
-def change_vars(expr, oldVar, newVar):
-    l = len(oldVar)
-    nexpr = expr
-    for idx in range(l):
-        nexpr = nexpr.subs(oldVar[l - idx - 1], newVar[l - idx - 1])
-    return nexpr
-
 def robot_Dmat(DH, Masses, Inertias, CoMs):
     sz = DH.shape[0]
     Dmat = zeros(sz, sz)
@@ -78,3 +71,14 @@ def robot_dynamics(DH,g, Masses, Inertias, CoMs):
     Cmat = robot_Cmat(Dmat, DH)
     Gmat = robot_Gmat(DH, g, Masses, CoMs)
     return (Dmat, Cmat, Gmat)
+
+def robot_affine_system(Dmat,Cmat,Gmat,TQ):
+    Dinv = Dmat.inv()
+    fx = zeros(TQ.shape[0],1)
+    fx[0,0] = TQ[TQ.shape[0]//2 : TQ.shape[0], 0]
+    fx[TQ.shape[0]//2, 0] = -Dinv * ( Cmat * TQ[TQ.shape[0]//2 : TQ.shape[0], 0] + Gmat)
+
+    gx = zeros(TQ.shape[0], TQ.shape[0] // 2)
+    gx[TQ.shape[0] // 2, 0] = Dinv
+    return fx, gx
+    

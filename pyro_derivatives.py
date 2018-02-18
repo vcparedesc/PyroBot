@@ -21,4 +21,38 @@ def diff_vector_wrt_vector(vector, Q):
             M[row, col] = diff(vector[row], Q[col])
     return M
 
+# lie_derivative_Lf: Computes the lie derivative of vector along fx. Lf(vector)
+# @vector: is the vector taken to compute the lie derivative
+# @stateX: The state vector from which partial derivative will be calculated
+# @fx: The dynamic vector fx
+def lie_derivative_Lf(vector, stateX, fx):
+    return diff_vector_wrt_vector(vector, stateX) * fx
+
+# lie_derivative_Lg: Computes the lie derivative of vector along gx. Lg(vector)
+# @vector: is the vector taken to compute the lie derivative
+# @stateX: The state vector from which partial derivative will be calculated
+# @gx: The dynamic vector gx
+def lie_derivative_Lg(vector, stateX, gx):
+    return diff_vector_wrt_vector(vector, stateX) * gx
+
+# lie_derivative_Lfn: Computes the n-lie derivative of vector along fx. Lf^n(vector)
+# @vector: is the vector taken to compute the lie derivative
+# @stateX: The state vector from which partial derivative will be calculated
+# @fx: The dynamic vector fx
+# @n: The number of times lie derivative is taken
+def lie_derivative_Lfn(vector, stateX, fx, n):
+    result = vector
+    for k in range(n):
+        result = lie_derivative_Lf(result, stateX, fx)
+    return result
+
+# lie_derivative_LgLfn: Computes the (n-1)-lie derivative of vector along fx and one lie derivative wrt gx. LgLf^(n-1)(vector)
+# @vector: is the vector taken to compute the lie derivative
+# @stateX: The state vector from which partial derivative will be calculated
+# @fx: The dynamic vector fx
+# @gx: The dynamic vector gx
+# @n: The number of times lie derivative is taken
+def lie_derivative_LgLfn(vector, stateX, fx, gx, n):
+    result = lie_derivative_Lfn(vector, stateX, fx, n - 1)
+    return lie_derivative_Lg(result, stateX, gx)
     
