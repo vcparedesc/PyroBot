@@ -64,7 +64,7 @@ def print_python_dynamics(fx,gx,TQ,X,parameters, values):
 # @StateX: List of new states that will be used to write the matrix expressions
 # @parameters: List of parameters that will be read from the global ones
 # @parameters_values: List of parameters' values in same order that list "parameters"
-# @filename: The name of python file and the created class
+# @filename: The name of python file and the created classn
 def print_python_matrices(ExprList, ExprNames, BundleTQ, StateX, parameters, parameters_values, filename):    
     F = open(filename + ".py", "w")
     F.write("import numpy as np \n")
