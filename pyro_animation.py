@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as pltp
 from matplotlib import animation, rc
 from sympy import *
 import numpy as np
@@ -32,13 +32,13 @@ def animator(i):
     time_text.set_text(time_template % (i * delta_time))
     return line, time_text
 
-def fireAnimation(animationMatrix, idCOM, q_var, q_value, parameters, values, dt):
+def fireAnimation(animationMatrix, idCOM, q_var, q_value, parameters, values, dt, orientation = [0,1,2]):
     global Animatrix, Idcom, line, time_template, time_text, fig_anim, ax, ani, delta_time
     delta_time = dt
     
     Animatrix = animationMatrix
     COMindex = idCOM
-    evaluatePose(Animatrix, q_var, q_value, parameters, values)
+    evaluatePose(Animatrix, q_var, q_value, parameters, values, orientation)
     fig_anim = plt.figure()
     ax = fig_anim.add_subplot(111, autoscale_on=False, xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
     ax.grid()
@@ -62,14 +62,14 @@ def evalVars(matrix, q_var, q_value_x, parameters, values):
         vMat = vMat.subs(parameters[i], values[i])
     return vMat
 
-def evaluatePose(matrix,q_var, q_value, parameters, values):
+def evaluatePose(matrix,q_var, q_value, parameters, values, orientation):
     global PoseX, PoseY, PoseZ
     PoseX = zeros(matrix.shape[0],q_value.shape[0])
     PoseY = zeros(matrix.shape[0],q_value.shape[0])
     PoseZ = zeros(matrix.shape[0],q_value.shape[0])
     for i in range(q_value.shape[0]):
-        PoseX[0,i] = evalVars(matrix[:,0], q_var, q_value[i,:], parameters, values)
-        PoseY[0,i] = evalVars(matrix[:,1], q_var, q_value[i,:], parameters, values)
-        PoseZ[0,i] = evalVars(matrix[:,2], q_var, q_value[i,:], parameters, values)
+        PoseX[0,i] = np.sign(orientation[0] + 0.1) * evalVars(matrix[:,abs(orientation[0])], q_var, q_value[i,:], parameters, values)
+        PoseY[0,i] = np.sign(orientation[1] + 0.1) * evalVars(matrix[:,abs(orientation[1])], q_var, q_value[i,:], parameters, values)
+        PoseZ[0,i] = np.sign(orientation[2] + 0.1) * evalVars(matrix[:,abs(orientation[2])], q_var, q_value[i,:], parameters, values)
     return PoseX, PoseY, PoseZ
 

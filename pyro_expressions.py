@@ -23,7 +23,7 @@ def print_python_expr(expr, file_handler, id, X, parameters):
     F = file_handler
     rows = expr.shape[0]
     cols = expr.shape[1]
-    F.write("def get_"+ id + "(self,x):\n\t\t")
+    F.write("def get_"+ id + "(self,x,t):\n\t\t")
     for idx in range(len(X)):
         F.write(str(X[idx]) + " = x[" + str(idx) + "]")
         F.write('\n\t\t')
@@ -55,7 +55,7 @@ def print_python_expr(expr, file_handler, id, X, parameters):
 # @parameters: List of parameters that will be read from the global ones
 # @values: List of parameters' values in same order that list "parameters"
 def print_python_dynamics(fx,gx,TQ,X,parameters, values):
-    print_python_matrices([fx,gx], ["fx","gx"], TQ, X, parameters, values, "PyroDynamics")
+    print_python_matrices([fx,gx], ["fx","gx"], TQ, X, parameters, values, "PyroBot")
 
 # print_python_matrices: Writes a list of mathematical expressions for fast python computation
 # @ExprList: List of the expressions to be written. E.g: [fx, gx]
